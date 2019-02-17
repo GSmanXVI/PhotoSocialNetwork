@@ -1,0 +1,8 @@
+<div class="container my-4">
+  <button class="btn btn-outline-secondary" (click)="onBack()"><i class="fas fa-arrow-left"></i> Back</button>
+  <div class="row my-4">
+    <div class="col-sm-12" *ngIf="post">
+      <img src="{{post.imagePath}}" class="img-fluid">
+    </div>
+  </div>
+</div>

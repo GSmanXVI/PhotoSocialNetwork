@@ -1,0 +1,11 @@
+<div class="container" style="margin-bottom: 90px">
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item" *ngFor="let item of messages">{{item}}</li>
+  </ul>
+</div>
+<form class="input-group p-4 fixed-bottom" style="background-color: #f8f9fa" (submit)="sendMessage()">
+  <input autocomplete="off" type="text" name="message" [(ngModel)]="message" class="form-control" placeholder="Your message">
+  <div class="input-group-append">
+    <button class="btn btn-outline-primary" id="button-addon2">Send</button>
+  </div>
+</form>  

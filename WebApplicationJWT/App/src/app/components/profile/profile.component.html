@@ -1,0 +1,28 @@
+<div class="container my-4" *ngIf="profileData">
+  <h1 class="text-center display-4">{{profileData.name}} {{profileData.surname}}</h1>
+  <div *ngIf="username == appAuth.getUsername()">
+    <div class="py-4">
+        <input style="display: none" type="file" (change)="onFileChanged($event)" #fileInput>
+        <button class="btn btn-outline-primary mr-2" (click)="fileInput.click()">{{ selectedFile?.name || "Select File" }}</button>
+        <button *ngIf="selectedFile" class="btn btn-outline-success mr-2" (click)="onUpload()">Upload</button>
+        <button *ngIf="selectedFile" class="btn btn-outline-danger" (click)="onCancel()">Cancel</button>
+      </div>
+      <div class="progress" *ngIf="progress != 0">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" [ngStyle]="{'width': progress + '%'}">{{progress.toFixed()}}%</div>
+      </div>
+      <div class="progress" *ngIf="processing">
+        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Processing...</div>
+      </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-4 my-3" *ngFor="let item of photos">
+      <div class="card">
+        <img src="{{item.thumbnailPath}}" class="card-img-top" alt="thumbnail">
+        <div class="card-body py-2">
+          <a class="card-link" routerLink="/post/{{item.id}}">View</a>
+          <a href="javascript:void(0);" class="card-link text-danger" (click)="onDelete(item.id)">Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

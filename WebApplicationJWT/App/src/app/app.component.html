@@ -1,0 +1,25 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" routerLink="">AuthTest</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+      <li class="nav-item">
+        <a class="nav-link" routerLink="home">Home</a>
+      </li>
+      <li class="nav-item" *ngIf="auth.checkAuth()">
+        <a class="nav-link" routerLink="users">Users</a>
+      </li>
+      <li class="nav-item" *ngIf="auth.checkAuth()">
+        <a class="nav-link" routerLink="chat">Chat</a>
+      </li>
+    </ul>
+    <a *ngIf="auth.checkAuth()" class="my-2 my-sm-0 mr-2 text-muted" routerLink="profile/{{auth.getUsername()}}">{{auth.getUsername()}}</a>
+    <a *ngIf="!auth.checkAuth()" class="btn btn-outline-primary my-2 my-sm-0 mr-2" routerLink="register">Register</a>
+    <a *ngIf="!auth.checkAuth()" class="btn btn-outline-success my-2 my-sm-0 mr-2" routerLink="login">Login</a>
+    <button *ngIf="auth.checkAuth()" class="btn btn-outline-danger my-2 my-sm-0" type="button" (click)="onLogout()"><i class="fas fa-sign-out-alt"></i></button>
+  </div>
+</nav>
+
+<router-outlet></router-outlet>
