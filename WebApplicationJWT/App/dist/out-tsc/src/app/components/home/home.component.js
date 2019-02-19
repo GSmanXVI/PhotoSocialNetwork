@@ -19,22 +19,6 @@ var HomeComponent = /** @class */ (function () {
             });
         });
     };
-    HomeComponent.prototype.onView = function (id) {
-    };
-    HomeComponent.prototype.onNextPage = function () {
-        return tslib_1.__awaiter(this, void 0, void 0, function () {
-            return tslib_1.__generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        this.page++;
-                        return [4 /*yield*/, this.addPosts(this.page)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
     HomeComponent.prototype.addPosts = function (page) {
         return tslib_1.__awaiter(this, void 0, void 0, function () {
             var newPosts;
@@ -47,6 +31,26 @@ var HomeComponent = /** @class */ (function () {
                         newPosts.forEach(function (element) {
                             _this.posts.push(element);
                         });
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    HomeComponent.prototype.onImgError = function (img, imgPath) {
+        img.src = './assets/images/preloader.svg';
+        setTimeout(function () {
+            img.src = imgPath;
+        }, 5000);
+    };
+    HomeComponent.prototype.onScroll = function () {
+        return tslib_1.__awaiter(this, void 0, void 0, function () {
+            return tslib_1.__generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        this.page++;
+                        return [4 /*yield*/, this.addPosts(this.page)];
+                    case 1:
+                        _a.sent();
                         return [2 /*return*/];
                 }
             });

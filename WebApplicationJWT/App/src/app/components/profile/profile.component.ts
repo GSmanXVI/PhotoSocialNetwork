@@ -7,6 +7,8 @@ import { Post } from 'src/app/models/post';
 import { log } from 'util';
 import { ActivatedRoute } from '@angular/router';
 import { AppAuthService } from 'src/app/services/app-auth.service';
+import { retryWhen } from 'rxjs/operators';
+import { interval } from 'rxjs';
 
 @Component({
   selector: 'app-profile',
@@ -15,17 +17,17 @@ import { AppAuthService } from 'src/app/services/app-auth.service';
 })
 export class ProfileComponent implements OnInit {
   profileData: Profile;
+  username: string;
+  posts: Array<Post>;  
   selectedFile: any;
-  photos: Array<Post>;
   progress: number = 0;
   processing = false;
-  username: string;
-
+  page: number = 1;
 
   constructor(
     private http: HttpClient,
     private profile: ProfileService,
-    public photo: PostService,
+    private postService: PostService,
     private route: ActivatedRoute,
     public appAuth: AppAuthService
   ) { }
@@ -34,7 +36,7 @@ export class ProfileComponent implements OnInit {
     this.username = this.route.snapshot.paramMap.get('username');
     try {
       this.profileData = await this.profile.getProfile(this.username);    
-      this.photos = await this.photo.getUserPosts(this.username).toPromise();
+      this.posts = await this.postService.getUserPosts(this.username).toPromise();
     } catch (error) {
       console.log(error);
     }
@@ -42,70 +44,22 @@ export class ProfileComponent implements OnInit {
 
   onFileChanged(event) {
     this.selectedFile = event.target.files[0];
-    console.log(this.selectedFile);
+    // console.log(this.selectedFile);
   }
 
-  // async onUpload() {
-  //   const uploadData = new FormData();
-  //   uploadData.append('file', this.selectedFile);
-  //   try {
-  //     await this.http.post('api/posts/upload', uploadData).toPromise();
-  //     this.photos = await this.photo.getImages();
-  //     this.selectedFile = null;
-  //   } catch (error) {
-  //     console.log(error); 
-  //   }
-  // }
-
-  // onUpload() {
-  //   let self = this;
-  //   this.processing = false;
-  //   this.progress = 0;
-  //   const uploadData = new FormData();
-  //   uploadData.append('file', this.selectedFile);
-  //   this.http.post<any>('api/posts/upload', uploadData, { reportProgress: true, observe: 'events' }).subscribe(async event => {
-  //     console.log(event); 
-  //     let loaded = (<any>event).loaded;
-  //     let total = (<any>event).total;
-
-  //     if (loaded == total) {
-  //       this.selectedFile = null;
-  //       this.processing = true;
-  //       this.photo.getCurrentUserPosts().subscribe(result => {
-  //         self.progress = 0;
-  //         self.photos = result;
-  //         console.log("DONE"); 
-  //         self.processing = false;
-  //       });
-  //       // try {
-  //       //   this.photos = await this.photo.getCurrentUserPosts().toPromise();   
-  //       //   this.progress = 0;
-  //       //   this.processing = false;           
-  //       // } catch (error) {
-  //       //   console.log(error);         
-  //       // }
-  //     }
-  //     else if (event.type == 1) {
-  //       this.progress = loaded / (total / 100);
-  //     } else if (event.type == 0) {
-  //       this.selectedFile = null; 
-  //     } 
-  //     console.log(this.processing); 
-  //   });
-  // }
-
   onUpload() {
+    this.page = 1;
     let self = this;
     this.processing = false;
     this.progress = 0;
     const uploadData = new FormData();
     uploadData.append('file', this.selectedFile);
     this.http.post<any>('api/posts/upload', uploadData, { reportProgress: true, observe: 'events' }).subscribe(event => {
-      console.log(event); 
+      // console.log(event); 
       let loaded = (<any>event).loaded;
       let total = (<any>event).total;
-      console.log("Loaded:" + loaded);
-      console.log("Total:" + total);
+      // console.log("Loaded:" + loaded);
+      // console.log("Total:" + total);
 
       if (loaded == total && event.type == 1 && loaded != undefined && total != undefined) {
         this.progress = 0;
@@ -117,10 +71,10 @@ export class ProfileComponent implements OnInit {
       } else if (event.type == 0) {
         this.selectedFile = null; 
       } else if (event.type == 3) {
-        this.photo.getCurrentUserPosts().subscribe(result => {
-          self.photos = result;
+        this.postService.getCurrentUserPosts().subscribe(result => {
+          self.posts = result;
           self.processing = false;
-          console.log("DONE");  
+          // console.log("DONE");  
         });
       } 
     });
@@ -128,8 +82,9 @@ export class ProfileComponent implements OnInit {
 
   async onDelete(id: number) {
     try {
-      await this.photo.delete(id).toPromise(); 
-      this.photos = await this.photo.getCurrentUserPosts().toPromise();
+      await this.postService.delete(id).toPromise(); 
+      this.posts = await this.postService.getCurrentUserPosts().toPromise();
+      this.page = 1;
     } catch (error) {
       console.log(error); 
     }
@@ -139,7 +94,25 @@ export class ProfileComponent implements OnInit {
     this.selectedFile = null;
   }
 
-  onView(id: number) {
-    console.log(id); 
+  onImgError(img, imgPath) {
+    img.src = './assets/images/preloader.svg';
+
+    setTimeout(() => 
+    {
+      img.src = imgPath;
+    }, 5000);
+  }
+
+  async onScroll() {
+    this.page++;
+    // console.log(this.page); 
+    await this.addPosts(this.page);
+  }
+
+  async addPosts(page: number) {
+    let newPosts = await this.postService.getCurrentUserPosts(page).toPromise();
+    newPosts.forEach(element => {
+      this.posts.push(element); 
+    });
   }
 }

@@ -28,7 +28,7 @@ var AuthInterceptorService = /** @class */ (function () {
     };
     AuthInterceptorService.prototype.handleError = function (request, next) {
         var _this = this;
-        console.log("401 ERROR!");
+        console.log("Waiting for refresh token...");
         return this.auth.refresh().pipe(switchMap(function (newTokens) {
             _this.auth.setTokens(newTokens);
             return next.handle(_this.addHeaders(request, newTokens.accessToken));

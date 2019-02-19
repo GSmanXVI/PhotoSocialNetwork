@@ -1,15 +1,12 @@
 <div class="container my-4" *ngIf="posts">
-  <div class="row">
+  <div class="row" infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="50" (scrolled)="onScroll()">
     <div class="col-sm-4 my-3" *ngFor="let item of posts">
       <div class="card">
-        <img src="{{item.thumbnailPath}}" class="card-img-top" alt="...">
+        <img src="{{item.thumbnailPath}}" class="card-img-top" alt="thumbnail" #img (error)="onImgError(img, item.thumbnailPath)">
         <div class="card-body py-2">
-            <a class="card-link" routerLink="/post/{{item.id}}">View</a>
+          <a class="card-link" routerLink="/post/{{item.id}}">View</a>
         </div>
       </div>
     </div>
-  </div>
-  <div class="text-center">
-    <button class="btn btn-outline-primary" (click)="onNextPage()">Load more...</button>
   </div>
 </div>

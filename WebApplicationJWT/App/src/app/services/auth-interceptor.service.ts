@@ -34,7 +34,7 @@ export class AuthInterceptorService implements HttpInterceptor {
   }
 
   handleError(request: HttpRequest<any>, next: HttpHandler) {
-    console.log("401 ERROR!");
+    console.log("Waiting for refresh token...");
     return this.auth.refresh().pipe(
       switchMap((newTokens) => {
         this.auth.setTokens(newTokens);

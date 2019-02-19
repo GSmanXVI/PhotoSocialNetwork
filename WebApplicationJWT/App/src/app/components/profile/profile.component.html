@@ -14,13 +14,13 @@
         <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Processing...</div>
       </div>
   </div>
-  <div class="row">
-    <div class="col-sm-4 my-3" *ngFor="let item of photos">
+  <div class="row" infiniteScroll [infiniteScrollDistance]="2" [infiniteScrollThrottle]="50" (scrolled)="onScroll()">
+    <div class="col-sm-4 my-3" *ngFor="let item of posts">
       <div class="card">
-        <img src="{{item.thumbnailPath}}" class="card-img-top" alt="thumbnail">
+        <img src="{{item.thumbnailPath}}" class="card-img-top" alt="thumbnail" #img (error)="onImgError(img, item.thumbnailPath)">
         <div class="card-body py-2">
           <a class="card-link" routerLink="/post/{{item.id}}">View</a>
-          <a href="javascript:void(0);" class="card-link text-danger" (click)="onDelete(item.id)">Delete</a>
+          <a href="javascript:void(0);" class="card-link text-danger" (click)="onDelete(item.id)" *ngIf="username == appAuth.getUsername()">Delete</a>
         </div>
       </div>
     </div>

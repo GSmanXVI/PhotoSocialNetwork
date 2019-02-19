@@ -15,11 +15,11 @@ export class PostService {
   ) { }
 
   getCurrentUserPosts(page: number = 1) {
-    return this.http.get<Array<Post>>(`${this.url}/posts/user/${this.appAuth.getUsername()}`);
+    return this.http.get<Array<Post>>(`${this.url}/posts/user/${this.appAuth.getUsername()}?page=${page}`);
   }
 
   getUserPosts(username: string, page: number = 1) {
-    return this.http.get<Array<Post>>(`${this.url}/posts/user/${username}`);
+    return this.http.get<Array<Post>>(`${this.url}/posts/user/${username}?page=${page}`);
   }
 
   getPosts(page: number = 1) {

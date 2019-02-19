@@ -19,19 +19,24 @@ export class HomeComponent implements OnInit {
     await this.addPosts(this.page);
   }
 
-  onView(id: number) {
-
-  }
-
-  async onNextPage() {
-    this.page++;
-    await this.addPosts(this.page);
-  }
-
   async addPosts(page: number) {
     let newPosts = await this.postService.getPosts(page).toPromise();
     newPosts.forEach(element => {
       this.posts.push(element); 
     });
+  }
+
+  onImgError(img, imgPath) {
+    img.src = './assets/images/preloader.svg';
+
+    setTimeout(() => 
+    {
+      img.src = imgPath;
+    }, 5000);
+  }
+
+  async onScroll() {
+    this.page++;
+    await this.addPosts(this.page);
   }
 }

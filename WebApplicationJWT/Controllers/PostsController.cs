@@ -53,6 +53,9 @@ namespace WebApplicationJWT.Controllers
             var user = await userManager.FindByNameAsync(username);
             if (user != null)
             {
+                await cache.RemoveAsync($"posts_{username}");
+                await cache.RemoveAsync($"posts_home");
+
                 var isUploaded = false;
 
                 var fileName = $"{DateTime.Now.ToString("HH-mm-ss-dd-MM-yyyy-")}{file.FileName}";
@@ -93,54 +96,46 @@ namespace WebApplicationJWT.Controllers
             return BadRequest();
         }
 
-        //[HttpPost("upload")]
-        //[Authorize(Policy = "User")]
-        //public async Task<ActionResult> UploadImage([FromForm(Name = "file")] IFormFile file)
-        //{
-        //    string username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    var user = await userManager.FindByNameAsync(username);
-        //    if (user != null)
-        //    {
-        //        var fileName = imageService.SaveImage(file);
-                
-        //        context.Posts.Add(new Post
-        //        {
-        //            Title = "Image",
-        //            AppUserId = user.Id,
-        //            Date = DateTime.Now,
-        //            ImagePath = fileName
-        //        });
-        //        await context.SaveChangesAsync();
-                
-        //        return Json(new { location = fileName });
-        //    }
-        //    return BadRequest();
-        //}
-
         [HttpGet]
         public async Task<ActionResult> GetPosts(int page = 1)
         {
+            List<Post> posts = null;
+
             page--;
-            if (page == 0)
+
+            var cashedPosts = await cache.GetStringAsync($"posts_home");
+            if (cashedPosts == null)
             {
-                var cashedPosts = await cache.GetStringAsync("posts");
-                if (cashedPosts == null)
-                {
-                    var posts = await context.Posts.OrderByDescending(x => x.Date).Skip(postsPerPage * page).Take(postsPerPage).ToListAsync();
-                    if (posts != null)
-                    {
-                        var newCahse = JsonConvert.SerializeObject(posts);
-                        await cache.SetStringAsync("posts", newCahse);
-                        return Ok(posts);
-                    }
-                }
-                else
-                {
-                    var posts = JsonConvert.DeserializeObject<List<Post>>(cashedPosts);
-                    return Ok(posts);
-                }
+                posts = await context.Posts
+                    .ToListAsync();
+
+                if (posts == null) return NotFound();
+
+                var json = JsonConvert.SerializeObject(posts);
+                await cache.SetStringAsync($"posts_home", json);
             }
-            return NotFound();
+            else
+                posts = JsonConvert.DeserializeObject<List<Post>>(cashedPosts);
+
+            var sortedPosts = posts
+                .OrderByDescending(x => x.Date)
+                .Skip(postsPerPage * page)
+                .Take(postsPerPage);
+
+            return Ok(sortedPosts);
+
+            //page--;
+
+            //var posts = await context.Posts
+            //    .OrderByDescending(x => x.Date)
+            //    .Skip(postsPerPage * page)
+            //    .Take(postsPerPage)
+            //    .ToListAsync();
+
+            //if (posts != null)
+            //    return Ok(posts);
+
+            //return NotFound();
         }
 
         [HttpGet("{id}")]
@@ -155,33 +150,38 @@ namespace WebApplicationJWT.Controllers
         }
 
         [HttpGet("user/{username}")]
-        public async Task<ActionResult> GetUserPosts(string username)
+        public async Task<ActionResult> GetUserPosts(string username, int page = 1)
         {
-            var user = await userManager.FindByNameAsync(username);
-            if (user != null)
-            {
-                var posts = context.Posts.Where(x => x.AppUserId == user.Id).OrderByDescending(x => x.Date).ToList();
-                return Ok(posts);
-            }
-            return BadRequest();
-        }
+            List<Post> posts = null;
 
-        //[HttpDelete("{id}")]
-        //[Authorize(Policy = "User")]
-        //public async Task<ActionResult> DeletePost(int id)
-        //{
-        //    string username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //    var user = await userManager.FindByNameAsync(username);
-        //    var post = context.Posts.FirstOrDefault(x => x.Id == id);
-        //    if (post != null && user != null && post.AppUserId == user.Id)
-        //    {
-        //        imageService.DeleteImage(post.ImagePath);
-        //        context.Posts.Remove(post);
-        //        await context.SaveChangesAsync();
-        //        return NoContent();
-        //    }
-        //    return BadRequest();
-        //}
+            page--;
+
+            var cashedPosts = await cache.GetStringAsync($"posts_{username}");
+            if (cashedPosts == null)
+            {
+                var user = await userManager.FindByNameAsync(username);
+
+                if (user == null) return NotFound();
+                
+                posts = await context.Posts
+                    .Where(x => x.AppUserId == user.Id)
+                    .ToListAsync();
+
+                if (posts == null) return NotFound();
+
+                var json = JsonConvert.SerializeObject(posts);
+                await cache.SetStringAsync($"posts_{username}", json); 
+            }
+            else
+                posts = JsonConvert.DeserializeObject<List<Post>>(cashedPosts);
+            
+            var sortedPosts = posts
+                .OrderByDescending(x => x.Date)
+                .Skip(postsPerPage * page)
+                .Take(postsPerPage);
+
+            return Ok(sortedPosts);
+        }
 
         [HttpDelete("{id}")]
         [Authorize(Policy = "User")]
@@ -192,8 +192,9 @@ namespace WebApplicationJWT.Controllers
             var post = context.Posts.FirstOrDefault(x => x.Id == id);
             if (post != null && user != null && post.AppUserId == user.Id)
             {
-                //imageService.DeleteImage(post.ImagePath);
                 await StorageHelper.DeleteFileFromStorage(azureOptions, post.ImagePath.Split('/').Last());
+                await cache.RemoveAsync($"posts_{username}");
+                await cache.RemoveAsync($"posts_home");
 
                 context.Posts.Remove(post);
                 await context.SaveChangesAsync();
@@ -203,3 +204,50 @@ namespace WebApplicationJWT.Controllers
         }
     }
 }
+
+
+
+
+
+//page--;
+//if (page == 0)
+//{
+//    var cashedPosts = await cache.GetStringAsync("posts");
+//    if (cashedPosts == null)
+//    {
+//        var posts = await context.Posts.OrderByDescending(x => x.Date).Skip(postsPerPage * page).Take(postsPerPage).ToListAsync();
+//        if (posts != null)
+//        {
+//            var newCahse = JsonConvert.SerializeObject(posts);
+//            await cache.SetStringAsync("posts", newCahse);
+//            return Ok(posts);
+//        }
+//    }
+//    else
+//    {
+//        var posts = JsonConvert.DeserializeObject<List<Post>>(cashedPosts);
+//        return Ok(posts);
+//    }
+//}
+//return NotFound();
+
+
+
+
+
+//page--;
+//var user = await userManager.FindByNameAsync(username);
+//if (user != null)
+//{
+//    var posts = await context.Posts
+//        .Where(x => x.AppUserId == user.Id)
+//        .OrderByDescending(x => x.Date)
+//        .Skip(postsPerPage * page)
+//        .Take(postsPerPage)
+//        .ToListAsync();
+
+//    if (posts != null)
+//        return Ok(posts);
+//}
+
+//return NotFound();

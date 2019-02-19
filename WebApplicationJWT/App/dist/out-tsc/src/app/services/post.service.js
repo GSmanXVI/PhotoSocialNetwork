@@ -10,11 +10,11 @@ var PostService = /** @class */ (function () {
     }
     PostService.prototype.getCurrentUserPosts = function (page) {
         if (page === void 0) { page = 1; }
-        return this.http.get(this.url + "/posts/user/" + this.appAuth.getUsername());
+        return this.http.get(this.url + "/posts/user/" + this.appAuth.getUsername() + "?page=" + page);
     };
     PostService.prototype.getUserPosts = function (username, page) {
         if (page === void 0) { page = 1; }
-        return this.http.get(this.url + "/posts/user/" + username);
+        return this.http.get(this.url + "/posts/user/" + username + "?page=" + page);
     };
     PostService.prototype.getPosts = function (page) {
         if (page === void 0) { page = 1; }
